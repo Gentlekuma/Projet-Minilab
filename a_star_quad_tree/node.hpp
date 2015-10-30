@@ -20,6 +20,7 @@ struct PQCompareNode : public std::binary_function<Node*, Node*, bool>
 };
 
 enum Node_type {BLOCKED_NODE, MIXED_NODE, FREE_NODE, GOAL_NODE};
+enum Direction {DIR_N, DIR_W, DIR_S, DIR_E};
 
 class Node
 {
@@ -36,6 +37,7 @@ class Node
 	//Attributs for A* w/ quad trees :
 	int weight_so_far; //Weight to go to this tree
 	Node coming_from;
+	Direction previous_d;
 	
     public:
 	Node(int x, int y, int resolution, Node parent_node, Node_type type, std::array<Node*, 4> sons, std::list<Node*> neighborhood){
