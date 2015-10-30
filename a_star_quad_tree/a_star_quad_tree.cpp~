@@ -1,0 +1,11 @@
+
+int main(int argc, char** argv){
+    
+    
+    
+    
+    //use direction for cost (cost higher if changing direction and for quad trees)
+    //for latter : priority_queue<Node*, vector<Node*>, DereferenceCompareNode> queue
+
+    return 0;
+}
