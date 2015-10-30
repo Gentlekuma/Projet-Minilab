@@ -1,6 +1,6 @@
 // Node.hpp
 
-// Class for quadtree used with A* algorithm
+// Class for quadtree used with A* algorithm v0.1.1
 
 #ifndef NODE
 #define NODE
@@ -50,7 +50,9 @@ class Node
 	    return abs(this->x - goal->x) + abs(this->y - goal->y); //Distance de manhattan
 	}
 	    
-
+	bool isLeaf(){
+	    return false;
+	}
 	
 
 	
