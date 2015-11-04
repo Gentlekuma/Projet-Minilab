@@ -1,5 +1,5 @@
 EXEC = test_a_star_qt
-FLAGS = -Wall
+FLAGS = -Wall -std=c++11
 
 all: $(EXEC)
 
