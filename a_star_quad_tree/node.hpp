@@ -10,14 +10,8 @@
 #include <limits.h>
 #include <vector>
 #include <functional>
-
-struct PQCompareNode : public std::binary_function<Node*, Node*, bool>
-{
-	bool operator()(const Node* lhs, const Node* rhs) const
-	    {
-		return lhs->weight() > rhs->weight();
-	    }
-};
+#include <array>
+#include <list>
 
 enum Node_type {BLOCKED_NODE, MIXED_NODE, FREE_NODE, GOAL_NODE};
 enum Direction {DIR_N, DIR_W, DIR_S, DIR_E};
@@ -29,18 +23,19 @@ class Node
 	int x;
 	int y;
 	int resolution; //node size in pixels (1,2,4,8,16,32,...)
-	Node parent_node;
+	Node *parent_node;
 	Node_type type;
 	std::array<Node*, 4> sons; //subtrees list
 	std::list<Node *> neighborhood; //adjacent nodes list (4 nodes N,W,S,E) 
 	
+    public:
+
 	//Attributs for A* w/ quad trees :
 	int weight_so_far; //Weight to go to this tree
-	Node coming_from;
+	Node *coming_from;
 	Direction previous_d;
 	
-    public:
-	Node(int x, int y, int resolution, Node parent_node, Node_type type, std::array<Node*, 4> sons, std::list<Node*> neighborhood){
+	Node(int x, int y, int resolution, Node* parent_node, Node_type type, std::array<Node*, 4> sons, std::list<Node*> neighborhood){
 	    this->x = x;
 	    this->y = y;
 	    this->resolution = resolution;
@@ -50,11 +45,11 @@ class Node
 	    this->neighborhood = neighborhood;
 	    
 	    //Default values :
-	    this->weigh_so_far=INT_MAX;
+	    this->weight_so_far=INT_MAX;
 	    this->coming_from=NULL;
 	}
 	
-	int heuristique(Node goal){
+	int heuristique(Node* goal){
 	    return abs(this->x - goal->x) + abs(this->y - goal->y); //Distance de manhattan
 	}
 	
@@ -65,9 +60,9 @@ class Node
 	bool isRoot(){
 	    return parent_node == NULL;
 	}
-
+	
 	bool isGoal(){
 	    return type==GOAL_NODE;
 	}
-     
+};
 #endif
