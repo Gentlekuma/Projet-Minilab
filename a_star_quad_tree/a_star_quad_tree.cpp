@@ -3,8 +3,9 @@
 
 #include <queue>
 #include <vector>
-
+#include "a_star_quad_tree.hpp"
 #include "node.hpp"
+#include <iostream>
 
 class Compare{
     public:
@@ -15,9 +16,8 @@ class Compare{
 
 
 std::list<Node *> a_star_qt(Node *beginning, Node *goal){
-    std::priority_queue<Node*, vector<Node*>, Compare> frontier;
-    std::List<Node *> path;
-    Direction d;
+    std::priority_queue<Node*, std::vector<Node*>, Compare> frontier;
+    std::list<Node *> path;
     Direction new_d;
     Node * frontier_top;
     int new_weigh;
@@ -27,23 +27,23 @@ std::list<Node *> a_star_qt(Node *beginning, Node *goal){
     beginning->weight_so_far=beginning->resolution;
     
     for (std::list<Node *>::iterator it=beginning->neighborhood.begin(); it != beginning->neighborhood.end(); ++it){
-	new_d = new_direction( it, frontier_top);
-	it->weight_so_far = beginning->weight_so_far + it->resolution + goal.heuristique( it );
-	it->coming_from = beginning;
-	it->previous_d = new_d;
+	new_d = new_direction(beginning, (*it));
+	(*it)->weight_so_far = beginning->weight_so_far + (*it)->resolution + goal->heuristique((*it));
+	(*it)->coming_from = beginning;
+	(*it)->previous_d = new_d;
 	
-	frontier.push(it);
+	frontier.push((*it));
     }
     
-    while(!frontier.isEmpty() && !(frontier.top().isGoal()) ){ 
+    while(!frontier.empty() && (frontier.top()->type != GOAL_NODE) ){ 
 	//while frontier not empty and goal not found
 
 	frontier_top = frontier.top();
 	frontier.pop();
 	
 	for (std::list<Node *>::iterator it=frontier_top->neighborhood.begin(); it != frontier_top->neighborhood.end(); ++it){
-	    new_d = new_direction( (*it), frontier_top);
-	    new_weigh = frontier_top->weight_so_far + (*it)->resolution + + goal.heuristique( (*it) ) + malus(new_d, frontier_top->previous_d);
+	    new_d = new_direction(frontier_top, (*it));
+	    new_weigh = frontier_top->weight_so_far + (*it)->resolution + + goal->heuristique( (*it) ) + malus(new_d, frontier_top->previous_d);
 	    
 	    if(new_weigh < (*it)->weight_so_far){
 		(*it)->weight_so_far = new_weigh;
@@ -57,22 +57,24 @@ std::list<Node *> a_star_qt(Node *beginning, Node *goal){
     
     // get the path recursively :
     
-    if (!frontier.std::top().isGoal()){
-	Node temp = frontier.top();
+    if (frontier.top()->type != GOAL_NODE){
+	Node* temp = frontier.top();
 	while ( temp != NULL){
-	    path.push(temp);
+	    path.push_front(temp);
 	    temp = temp->coming_from;
 	}
     }
     
-    if (std::end(path).isGoal() ){
+    if ( path.begin()->type == GOAL_NODE){
 	std::cout << "is Okay" << std::endl;
 	return path;
     }
     else{
-	std::cerr << "ZE PATH IS NOT FINISHED SCHIESSE" << std::endl;
+	std::cerr << "not okay" << std::endl;
 	exit(-1);
     }
+
+    return path;
 }
 
 int malus(Direction new_d, Direction d){
@@ -97,7 +99,7 @@ Direction new_direction(Node *from, Node *to){
     }
     else{
 	if (delta_y >=0){
-	    return DIR_S
+	    return DIR_S;
 		}
 	else{
 	    return DIR_N;

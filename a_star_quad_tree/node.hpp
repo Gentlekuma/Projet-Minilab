@@ -18,7 +18,7 @@ enum Direction {DIR_N, DIR_W, DIR_S, DIR_E};
 
 class Node
 {
-    protected:
+    public:
 	//Attributs from the map :
 	int x;
 	int y;
@@ -27,9 +27,6 @@ class Node
 	Node_type type;
 	std::array<Node*, 4> sons; //subtrees list
 	std::list<Node *> neighborhood; //adjacent nodes list (4 nodes N,W,S,E) 
-	
-    public:
-
 	//Attributs for A* w/ quad trees :
 	int weight_so_far; //Weight to go to this tree
 	Node *coming_from;
