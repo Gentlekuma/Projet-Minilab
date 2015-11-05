@@ -21,6 +21,7 @@ std::list<Node *> a_star_qt(Node *beginning, Node *goal){
     Direction new_d;
     Node * frontier_top;
     int new_weigh;
+    Node* temp;
 
     //Explore the first node :
 
@@ -58,14 +59,16 @@ std::list<Node *> a_star_qt(Node *beginning, Node *goal){
     // get the path recursively :
     
     if (frontier.top()->type != GOAL_NODE){
-	Node* temp = frontier.top();
+	temp = frontier.top();
+	frontier.pop();
 	while ( temp != NULL){
 	    path.push_front(temp);
 	    temp = temp->coming_from;
 	}
     }
     
-    if ( path.begin()->type == GOAL_NODE){
+    /*
+    if ( path.end()->type == GOAL_NODE){
 	std::cout << "is Okay" << std::endl;
 	return path;
     }
@@ -73,7 +76,7 @@ std::list<Node *> a_star_qt(Node *beginning, Node *goal){
 	std::cerr << "not okay" << std::endl;
 	exit(-1);
     }
-
+    */
     return path;
 }
 
@@ -107,5 +110,8 @@ Direction new_direction(Node *from, Node *to){
     }
 }
 
+int main(){
+    return 0;
+}
 		      
 #endif
