@@ -5,7 +5,7 @@
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
-#include "Node.hpp"
+#include "node.hpp"
 #include "TestQuad.hpp"
 #include <vector>
 #include "Map.hpp"
@@ -15,20 +15,17 @@ using namespace cv;
 Mat src;
 int level;
 
-int erosion_elem = 0;
-int erosion_size = 0;
-int dilation_elem = 0;
-int dilation_size = 0;
 
-std::list<Node *>leaf; //Contient toutes les feuilles libres de l'arbre
+std::vector<Node *>leaf; //Contient toutes les feuilles libres de l'arbre
 
 int main( int, char** argv )
 {
 	int i = 0;
 	int j = 0;
 	int l = 0;
+	int id = 0;
 	
-	Node *root = new Node();
+	Node* root = new Node();
 	
 	
 	//int reso = 32;
@@ -42,25 +39,7 @@ int main( int, char** argv )
 	
 	
 	cvtColor(src, src, CV_BGR2GRAY);
-	/*
-	blur(src, src, Size(3, 3));  // Applique une matrice de convolution de 3 x 3 pour le blur
-	threshold(src, src, 210, 255, CV_THRESH_BINARY);
 	
-	for (i=0;i<8;i++)
-	{
-		erosion_size = i;
-		dilation_size = i;
-		Ouverture(0,0);
-		
-	}
-	
-	imshow("src", src);
-	
-	//Remplissage de la map pour avoir des dimensions paires 
-	int top = (int) reso-src.cols%reso;
-	int right = (int) (src.cols-src.rows);
-	copyMakeBorder( src,src,top,0,0,right,BORDER_CONSTANT,0);
-	*/
 	//Initialisation du node root 
 	
 	root->x = 0;
@@ -88,10 +67,10 @@ int main( int, char** argv )
 	//Réalisation de l'arbre de manière recursive
 	cvtColor(src, src, CV_GRAY2BGR);
 	
+	
 	//Verification emplacement des feuilles libres
 	int taille = leaf.size();
-	int k =0;
-	for( k = 0; l<taille ; l++){
+	for( l = 0; l<taille ; l++){
 		//std::cout << "Leaf "<< l << " x "<<leaf[l]->x<< std::endl;
 		//std::cout << "Leaf "<< l << " y "<<leaf[l]->y<< std::endl;
 		Vec3b color = src.at<Vec3b>(leaf[l]->x,leaf[l]->y);
@@ -101,15 +80,25 @@ int main( int, char** argv )
         src.at<Vec3b>(leaf[l]->x,leaf[l]->y) = color;
 	}
 	
+	int k = 0;
+	//Recherche des voisins
+	for( k = 0; k<taille ; k++){
+		NeigFill(leaf[k]);
+	}
 	
-	NeigAssign();
 	/*
-	std::cout << "Leaf x  "<<leaf[3]->x<< std::endl;
-	std::cout << "Leaf y "<<leaf[3]->y<< std::endl;
-	
-	std::cout << "Voisin x "<<leaf[3]->neighborhood.front()->x<< std::endl;
-	std::cout << "Voisin y "<<leaf[3]->neighborhood.front()->y<< std::endl;
+	for ( std::list<int>::iterator it=leaf.begin(); it != leaf.end(); ++it ){
+		Vec3b color = src.at<Vec3b>(*it->x,*it->y);
+		color[0] = 0;
+        color[1] = 0;
+        color[2] = 255;
+        src.at<Vec3b>(*it->x,*it->y) = color;
+	}
 	*/
+	
+	//NeigAssign();
+
+
 	imshow("pad", src);
 	
 	
@@ -183,7 +172,7 @@ void Decide(Node* node)
 
 void Divise(Node* node)
 {
-	
+		if ( node->resolution >= 8 ) {
 		level = level + 1;
 		std::cout << "Level "<<level<< std::endl;
 		std::cout << "Nombre feuilles "<<leaf.size()<< std::endl;
@@ -203,8 +192,10 @@ void Divise(Node* node)
 			node->sons[3] = new Node( node->x+(node->resolution)/2 , node->y+(node->resolution)/2 , (node->resolution)/2, node , FREE_NODE , node->sons , node->neighborhood );
 			Decide(node->sons[3]);
 			//TypeAssign(node->sons[3]);
+		}
 }
 
+/*
 void NeigAssign(){
 	
 	int taille = leaf.size();
@@ -274,78 +265,181 @@ void NeigAssign(){
 		}
 	}
 }
-
-/*
-void FindNeig(){
-	
-	int taille = leaf.size();
-	int i;
-	int j;
-	int A[2];
-	int B[2];
-	int C[2];
-	int D[2];
-	
-	for (i = 0; i<taille ; i++)
-	{
-		
-		A[1] = leaf[i]->x;
-		A[2] = leaf[i]->y-1;
-		B[1] = leaf[i]->x;
-		B[2] = leaf[i]->y + leaf[i]->resolution -1;
-		C[1] = leaf[i]->x;
-		C[2] = leaf[i]->y-1;
-		D[1] = leaf[i]->x;
-		D[2] = leaf[i]->y-1;
-		
-		for ( j = 0; j<taille ; j++){
-			
-		
-		}
-	}	
-}
 */
 
-void Erosion( int, void* )
-{
-  int erosion_type = 0;
-  if( erosion_elem == 0 ){ erosion_type = MORPH_RECT; }
-  else if( erosion_elem == 1 ){ erosion_type = MORPH_CROSS; }
-  else if( erosion_elem == 2) { erosion_type = MORPH_ELLIPSE; }
 
-  Mat element = getStructuringElement( erosion_type,
-                       Size( 2*erosion_size + 1, 2*erosion_size+1 ),
-                       Point( erosion_size, erosion_size ) );
-  erode( src, src, element );
-  //imshow( "Erosion Demo", erosion_dst );
+// Methode de recherche des voisins fonctionnelle
+
+Node* FindNorthNeig(Node* node){
+	
+	if ( node->isRoot() == true ){
+		std::cout << " Est Racine" << std::endl;
+		return NULL;
+	}
+	
+	if ( node == node->parent_node->sons[2] ) {
+		std::cout << " Voisin nord trouvé " << std::endl;
+		return node->parent_node->sons[0];
+		
+	}
+	
+	if ( node == node->parent_node->sons[3] ) {
+		std::cout << " Voisin nord trouvé " << std::endl;
+		return node->parent_node->sons[1];
+		
+	}
+	
+	std::cout << " Recherche de voisins dans le niveau au dessus " << std::endl;
+	Node* Inter = FindNorthNeig(node->parent_node);
+
+	
+	if ( (Inter == NULL)||(Inter->isLeaf() == true) ){
+		std::cout << " Est Racine" << std::endl;
+		return NULL;
+	}
+	else
+	{
+		if ( node == node->parent_node->sons[0] ) { 
+			std::cout << " Voisin nord trouvé " << std::endl;
+			return Inter->sons[2];
+			
+		}
+		else{
+			std::cout << " Voisin nord trouvé " << std::endl;
+			return Inter->sons[3];
+		}
+	}
+
+}
+
+Node* FindEastNeig(Node* node){
+	
+	if ( node->isRoot() == true ){
+		return NULL;
+	}
+	
+	if ( node == node->parent_node->sons[3] ) {
+		std::cout << " Voisin est trouvé " << std::endl;
+		return node->parent_node->sons[2];
+		
+	}
+	
+	if ( node == node->parent_node->sons[1] ) {
+		std::cout << " Voisin est trouvé " << std::endl;
+		return node->parent_node->sons[0];
+		
+	}
+
+	Node* Inter = FindEastNeig(node->parent_node);
+
+	
+	if ( (Inter == NULL)||(Inter->isLeaf() == true) )
+		return NULL;
+	else
+	{
+		if ( node == node->parent_node->sons[2] ) { 
+			std::cout << " Voisin est trouvé " << std::endl;
+			return Inter->sons[3];
+			
+		}
+		else{
+			std::cout << " Voisin est trouvé " << std::endl;
+			return Inter->sons[1];
+			
+		}
+	}
+
+}
+
+Node* FindSouthNeig(Node* node){
+	
+	if ( node->isRoot() == true ){
+		return NULL;
+	}
+	
+	if ( node == node->parent_node->sons[1] ) {
+		std::cout << " Voisin sud trouvé " << std::endl;
+		return node->parent_node->sons[3];
+		
+	}
+	
+	if ( node == node->parent_node->sons[0] ) {
+		std::cout << " Voisin sud trouvé " << std::endl;
+		return node->parent_node->sons[2];
+		
+	}
+
+	Node* Inter = FindSouthNeig(node->parent_node);
+
+	
+	if ( (Inter == NULL)||(Inter->isLeaf() == true) )
+		return NULL;
+	else
+	{
+		if ( node == node->parent_node->sons[3] ) { 
+			std::cout << " Voisin sud trouvé " << std::endl;
+			return Inter->sons[1];
+			
+		}
+		else{
+			std::cout << " Voisin sud trouvé " << std::endl;
+			return Inter->sons[0];
+			
+		}
+	}
+
+}
+
+Node* FindWestNeig(Node* node){
+	
+	if ( node->isRoot() == true ){
+		return NULL;
+	}
+	
+	if ( node == node->parent_node->sons[0] ) {
+		std::cout << " Voisin ouest trouvé " << std::endl;
+		return node->parent_node->sons[1];
+		
+	}
+	
+	if ( node == node->parent_node->sons[2] ) {
+		std::cout << " Voisin ouest trouvé " << std::endl;
+		return node->parent_node->sons[3];
+		
+	}
+
+	Node* Inter = FindWestNeig(node->parent_node);
+
+	
+	if ( (Inter == NULL)||(Inter->isLeaf() == true) )
+		return NULL;
+	else
+	{
+		if ( node == node->parent_node->sons[1] ) { 
+			std::cout << " Voisin ouest trouvé " << std::endl;
+			return Inter->sons[0];
+			
+		}
+		else{
+			std::cout << " Voisin ouest trouvé " << std::endl;
+			return Inter->sons[2];
+		}	
+	}
+
+}
+
+void NeigFill(Node* node){
+	
+	std::cout << " Debut recherche voisins " << std::endl;
+	node->neighborhood.push_back(FindNorthNeig(node));
+	node->neighborhood.push_back(FindEastNeig(node));
+	node->neighborhood.push_back(FindSouthNeig(node));
+	node->neighborhood.push_back(FindWestNeig(node));
+	
+	
 }
 
 
-void Dilation( int, void*)
-{
-  int dilation_type = 0;
-  if( dilation_elem == 0 ){ dilation_type = MORPH_RECT; }
-  else if( dilation_elem == 1 ){ dilation_type = MORPH_CROSS; }
-  else if( dilation_elem == 2) { dilation_type = MORPH_ELLIPSE; }
-
-  Mat element = getStructuringElement( dilation_type,
-                       Size( 2*dilation_size + 1, 2*dilation_size+1 ),
-                       Point( dilation_size, dilation_size ) );
-  dilate( src, src, element );
-  //imshow( "Dilation Demo", dilation_dst );
-}
-
-void Fermeture(int, void*)
-{
-	Dilation( 0, 0);
-	Erosion( 0, 0);
-}	
-
-void Ouverture(int, void*)
-{
-	Erosion( 0, 0);
-	Dilation( 0, 0);
-}
 
 
 	

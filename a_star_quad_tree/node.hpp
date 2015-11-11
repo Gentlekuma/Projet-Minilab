@@ -23,14 +23,19 @@ class Node
 	int x;
 	int y;
 	int resolution; //node size in pixels (1,2,4,8,16,32,...)
-	Node *parent_node;
+	Node* parent_node;
 	Node_type type;
 	std::array<Node*, 4> sons; //subtrees list
 	std::list<Node *> neighborhood; //adjacent nodes list (4 nodes N,W,S,E) 
+	int pixel_id; //Number ID of pixels within the node for neighbours search
 	//Attributs for A* w/ quad trees :
 	int weight_so_far; //Weight to go to this tree
 	Node *coming_from;
 	Direction previous_d;
+	
+	Node(){
+		
+	}
 	
 	Node(int x, int y, int resolution, Node* parent_node, Node_type type, std::array<Node*, 4> sons, std::list<Node*> neighborhood){
 	    this->x = x;
@@ -40,6 +45,7 @@ class Node
 	    this->type = type;
 	    this->sons = sons;
 	    this->neighborhood = neighborhood;
+	    
 	    
 	    //Default values :
 	    this->weight_so_far=INT_MAX;
