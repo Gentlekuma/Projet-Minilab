@@ -13,7 +13,7 @@
 #include <array>
 #include <list>
 
-enum Node_type {BLOCKED_NODE, MIXED_NODE, FREE_NODE, GOAL_NODE};
+enum Node_type {BLOCKED_NODE, MIXED_NODE, FREE_NODE, GOAL_NODE, UNDECIDED_NODE};
 enum Direction {DIR_N, DIR_W, DIR_S, DIR_E};
 
 class Node
