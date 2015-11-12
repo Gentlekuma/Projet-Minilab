@@ -36,7 +36,7 @@ std::list<Node *> a_star_qt(Node *beginning, Node *goal){
 	frontier.push((*it));
     }
     
-    while(!frontier.empty() && (frontier.top()->type != GOAL_NODE) ){ 
+    while(!frontier.empty() && (frontier.top()->isGoal()) ){ 
 	//while frontier not empty and goal not found
 
 	frontier_top = frontier.top();
@@ -58,7 +58,7 @@ std::list<Node *> a_star_qt(Node *beginning, Node *goal){
     
     // get the path recursively :
     
-    if ((*frontier.top()).isGoal() ){
+    if (frontier.top()->isGoal() ){
 	temp = frontier.top();
 	frontier.pop();
 	while ( temp != NULL){
@@ -67,7 +67,6 @@ std::list<Node *> a_star_qt(Node *beginning, Node *goal){
 	}
     }
     
-    //if ( (*path.end()).isGoal() ){
     if ( (*path.end())->isGoal() ){
 	std::cout << "is Okay" << std::endl;
 	return path;
