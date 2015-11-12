@@ -81,8 +81,11 @@ int main( int, char** argv )
 	}
 	
 	int k = 0;
-	//Recherche des voisins
+	//Recherche des voisins et choix du goal 
 	for( k = 0; k<taille ; k++){
+		if ( leaf[k]->x == 160 && leaf[k]->y == 192 ) {
+			leaf[k]->type = GOAL_NODE;
+		}
 		NeigFill(leaf[k]);
 	}
 	
