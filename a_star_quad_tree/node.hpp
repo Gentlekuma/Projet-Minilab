@@ -14,7 +14,7 @@
 #include <list>
 
 enum Node_type {BLOCKED_NODE, MIXED_NODE, FREE_NODE, GOAL_NODE, UNDECIDED_NODE};
-enum Direction {DIR_N, DIR_W, DIR_S, DIR_E};
+//enum Direction {DIR_N, DIR_W, DIR_S, DIR_E};
 
 class Node
 {
@@ -31,7 +31,6 @@ class Node
 	//Attributs for A* w/ quad trees :
 	int weight_so_far; //Weight to go to this tree
 	Node *coming_from;
-	Direction previous_d;
 	
 	Node(){
 		
@@ -57,7 +56,8 @@ class Node
 	}
 	
 	bool isLeaf(){
-	    return sons[0]==NULL && sons[1]==NULL && sons[2]==NULL && sons[3]==NULL;
+	    //return sons[0]==NULL && sons[1]==NULL && sons[2]==NULL && sons[3]==NULL;
+	    return type==FREE_NODE;
 	}
 	
 	bool isRoot(){

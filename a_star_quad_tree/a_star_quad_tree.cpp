@@ -15,10 +15,8 @@ class Compare{
 };
 
 
-std::list<Node *> a_star_qt(Node *beginning, Node *goal){
+void a_star_qt(Node *beginning, Node *goal, std::list<Node *> * path){
     std::priority_queue<Node*, std::vector<Node*>, Compare> frontier;
-    std::list<Node *> path;
-    Direction new_d;
     Node * frontier_top;
     int new_weigh;
     Node* temp;
@@ -26,31 +24,26 @@ std::list<Node *> a_star_qt(Node *beginning, Node *goal){
     //Explore the first node :
 
     beginning->weight_so_far=beginning->resolution;
-    
+       
     for (std::list<Node *>::iterator it=beginning->neighborhood.begin(); it != beginning->neighborhood.end(); ++it){
-	new_d = new_direction(beginning, (*it));
 	(*it)->weight_so_far = beginning->weight_so_far + (*it)->resolution + goal->heuristique((*it));
 	(*it)->coming_from = beginning;
-	(*it)->previous_d = new_d;
 	
 	frontier.push((*it));
     }
     
-    while(!frontier.empty() && (frontier.top()->isGoal()) ){ 
+    while(!frontier.empty() && !(frontier.top()->isGoal()) ){ 
 	//while frontier not empty and goal not found
 
 	frontier_top = frontier.top();
 	frontier.pop();
 	
 	for (std::list<Node *>::iterator it=frontier_top->neighborhood.begin(); it != frontier_top->neighborhood.end(); ++it){
-	    new_d = new_direction(frontier_top, (*it));
-	    new_weigh = frontier_top->weight_so_far + (*it)->resolution + + goal->heuristique( (*it) ) + malus(new_d, frontier_top->previous_d);
+	    new_weigh = frontier_top->weight_so_far + (*it)->resolution + + goal->heuristique( (*it) );
 	    
 	    if(new_weigh < (*it)->weight_so_far){
 		(*it)->weight_so_far = new_weigh;
 		(*it)->coming_from = frontier_top;
-		(*it)->previous_d = new_d;
-		
 		frontier.push(*it);
 	    }
 	}
@@ -58,57 +51,51 @@ std::list<Node *> a_star_qt(Node *beginning, Node *goal){
     
     // get the path recursively :
     
-    if (frontier.top()->isGoal() ){
+    if (!frontier.empty() && frontier.top()->isGoal() ){
 	temp = frontier.top();
 	frontier.pop();
 	while ( temp != NULL){
-	    path.push_front(temp);
+	    (*path).push_front(temp);
 	    temp = temp->coming_from;
-	}
-    }
-    
-    if ( (*path.end())->isGoal() ){
-	std::cout << "is Okay" << std::endl;
-	return path;
-    }
-    else{
-	std::cerr << "not okay" << std::endl;
-	exit(-1);
-    }
-    return path;
-}
-
-int malus(Direction new_d, Direction d){
-    //get a malus for every turn to maximise the length of straight paths starting from the first node
-    if (new_d != d)
-	return 1;
-    else
-	return 0;
-}
-
-Direction new_direction(Node *from, Node *to){
-    int delta_x = to->x - from->x;
-    int delta_y = to->y - from->y;
-    
-    if (abs(delta_x) > abs(delta_y)){
-	if (delta_x >=0){
-	    return DIR_E;
-	}
-	else{
-	    return DIR_W;
-	}
-    }
-    else{
-	if (delta_y >=0){
-	    return DIR_S;
-		}
-	else{
-	    return DIR_N;
 	}
     }
 }
 
 int main(){
+
+    std::array<Node*, 4> sons = {NULL,NULL,NULL,NULL};
+    std::list<Node *> neighborhood1; 
+    std::list<Node *> neighborhood2;
+
+    Node n1(0, 0, 4, NULL, FREE_NODE, sons, neighborhood1);
+    Node n2(4, 0, 4, NULL, FREE_NODE, sons, neighborhood1);
+    Node n3(8, 0, 4, NULL, GOAL_NODE, sons , neighborhood2);
+
+
+    neighborhood1.push_front(&n2);
+    neighborhood2.push_front(&n1);
+    neighborhood2.push_front(&n3);
+    
+    n1.neighborhood = neighborhood1;
+    n2.neighborhood = neighborhood2;
+    
+    std::list<Node *> path;
+    a_star_qt(&n2, &n3, &path);
+    
+    
+    if ( !(path.empty()) && path.back()->isGoal() ){
+	std::cout << "Path is okay :" << std::endl;
+	for (std::list<Node *>::iterator it = path.begin(); it != path.end(); it++){
+	    std::cout << (*it)->x << ' ' << (*it)->y << std::endl;
+	}
+	
+    }
+    else{
+	std::cerr << "Path is not okay" << std::endl;
+	exit(-1);
+    }
+
+  
     return 0;
 }
 		      
