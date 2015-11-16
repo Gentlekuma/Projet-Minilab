@@ -81,22 +81,15 @@ int main( int, char** argv )
 	}
 	
 	int k = 0;
-	//Recherche des voisins
+	//Recherche des voisins et choix du goal 
 	for( k = 0; k<taille ; k++){
+		if ( leaf[k]->x == 160 && leaf[k]->y == 192 ) {
+			leaf[k]->type = GOAL_NODE;
+		}
 		NeigFill(leaf[k]);
+		
+		std::cout << "Nombre de voisins "<<leaf[k]->neighborhood.size()<< std::endl;
 	}
-	
-	/*
-	for ( std::list<int>::iterator it=leaf.begin(); it != leaf.end(); ++it ){
-		Vec3b color = src.at<Vec3b>(*it->x,*it->y);
-		color[0] = 0;
-        color[1] = 0;
-        color[2] = 255;
-        src.at<Vec3b>(*it->x,*it->y) = color;
-	}
-	*/
-	
-	//NeigAssign();
 
 
 	imshow("pad", src);
@@ -172,7 +165,7 @@ void Decide(Node* node)
 
 void Divise(Node* node)
 {
-		if ( node->resolution >= 8 ) {
+		if ( node->resolution >= 4 ) {
 		level = level + 1;
 		std::cout << "Level "<<level<< std::endl;
 		std::cout << "Nombre feuilles "<<leaf.size()<< std::endl;
@@ -195,118 +188,52 @@ void Divise(Node* node)
 		}
 }
 
-/*
-void NeigAssign(){
-	
-	int taille = leaf.size();
-	int i;
-	int n;
-	int w;
-	int s;
-	int e;
-	for (i = 0; i<taille ; i++)
-	{
-		std::cout << "Recherche de voisins sur le node x = "<< leaf[i]->x<<" y = "<< leaf[i]->y << std::endl;
-		std::cout << "  "<< std::endl;
-		//Points de test North,West,South,East
-		int N[2];
-		int W[2];
-		int S[2];
-		int E[2];
-		
-		
-		N[1] = leaf[i]->x;
-		N[2] = leaf[i]->y-2;
-		for (n = 0; n<taille ; n++)
-		{
-			if ((N[1] == leaf[n]->x) && (N[2] == ((leaf[n]->y)+(leaf[n]->resolution)-2)))
-			{
-				std::cout << "NNNN Recherche Nord sur le node x = "<< leaf[n]->x<<" y = "<< leaf[n]->y << std::endl;
-				std::cout << "Voisin Nord trouvé"<< std::endl;
-				leaf[i]->neighborhood.push_back(leaf[n]);
-			}
-		} 
-		
-		W[1] = leaf[i]->x-2;
-		W[2] = leaf[i]->y;
-		
-		for (w = 0; w<taille ; w++)
-		{
-			if (W[2] == leaf[w]->y && W[1] > leaf[w]->y && W[1] < (leaf[w]->y + leaf[w]->resolution))
-			{
-				std::cout << "WWWW Recherche Ouest sur le node x = "<< leaf[w]->x<<" y = "<< leaf[w]->y << std::endl;
-				std::cout << "Voisin Ouest trouvé"<< std::endl;
-				leaf[i]->neighborhood.push_back(leaf[w]);
-			}
-		} 
-		
-		S[1] = leaf[i]->x;
-		S[2] = leaf[i]->y + leaf[i]->resolution + 2;
-		for (s = 0; s<taille ; s++)
-		{
-			if (S[1] == leaf[s]->x && S[2] > leaf[s]->x && S[2] < leaf[s]->x + leaf[s]->resolution)
-			{
-				std::cout << "SSSS Recherche Sud sur le node x = "<< leaf[s]->x<<" y = "<< leaf[s]->y << std::endl;
-				std::cout << "Voisin Sud trouvé"<< std::endl;
-				leaf[i]->neighborhood.push_back(leaf[s]);
-			}
-		} 
-		
-		E[1] = leaf[i]->x + leaf[i]->resolution + 2;
-		E[2] = leaf[i]->y;
-		for (e = 0; e<taille ; e++)
-		{
-			if (E[2] == leaf[e]->y && E[1] > leaf[e]->y && E[1] < (leaf[e]->y + leaf[e]->resolution))
-			{
-				std::cout << "EEEE Recherche Est sur le node x = "<< leaf[e]->x<<" y = "<< leaf[e]->y << std::endl;
-				std::cout << "Voisin Est trouvé"<< std::endl;
-				leaf[i]->neighborhood.push_back(leaf[e]);
-			}
-		}
-	}
-}
-*/
-
 
 // Methode de recherche des voisins fonctionnelle
 
 Node* FindNorthNeig(Node* node){
 	
 	if ( node->isRoot() == true ){
-		std::cout << " Est Racine" << std::endl;
+		//std::cout << " Est Racine" << std::endl;
 		return NULL;
 	}
 	
-	if ( node == node->parent_node->sons[2] ) {
-		std::cout << " Voisin nord trouvé " << std::endl;
+	if ( node == node->parent_node->sons[2] /*&& node->parent_node->sons[0]->type == FREE_NODE*/ ) {
+		//std::cout << " Voisin nord trouvé x =  "<<node->parent_node->sons[0]->x<< " y = " << node->parent_node->sons[0]->y << std::endl;
 		return node->parent_node->sons[0];
 		
 	}
 	
-	if ( node == node->parent_node->sons[3] ) {
-		std::cout << " Voisin nord trouvé " << std::endl;
+	if ( node == node->parent_node->sons[3] /*&& node->parent_node->sons[1]->type == FREE_NODE*/ ) {
+		//std::cout << " Voisin nord trouvé x =  "<<node->parent_node->sons[1]->x<< " y = " <<node->parent_node->sons[1]->y << std::endl;
 		return node->parent_node->sons[1];
 		
 	}
 	
-	std::cout << " Recherche de voisins dans le niveau au dessus " << std::endl;
+	//std::cout << " Recherche de voisins dans le niveau au dessus " << std::endl;
 	Node* Inter = FindNorthNeig(node->parent_node);
-
+	//std::cout << " Descente d'un niveau " << std::endl;
 	
 	if ( (Inter == NULL)||(Inter->isLeaf() == true) ){
-		std::cout << " Est Racine" << std::endl;
+		//std::cout << " Inter null ou feuille " << std::endl;
 		return NULL;
 	}
 	else
 	{
 		if ( node == node->parent_node->sons[0] ) { 
-			std::cout << " Voisin nord trouvé " << std::endl;
+			//if( Inter->sons[2]->type == FREE_NODE){
+			//std::cout << " Voisin inter nord trouvé "<< std::endl;
 			return Inter->sons[2];
+			/*else
+				return NULL;*/
 			
 		}
 		else{
-			std::cout << " Voisin nord trouvé " << std::endl;
-			return Inter->sons[3];
+			//if ( Inter->sons[3]->type == FREE_NODE){
+				//std::cout << " Voisin inter nord trouvé "<< std::endl;
+				return Inter->sons[3];
+			/*else
+				return NULL;*/
 		}
 	}
 
@@ -315,37 +242,47 @@ Node* FindNorthNeig(Node* node){
 Node* FindEastNeig(Node* node){
 	
 	if ( node->isRoot() == true ){
+		//std::cout << " Est Racine" << std::endl;
 		return NULL;
 	}
 	
-	if ( node == node->parent_node->sons[3] ) {
-		std::cout << " Voisin est trouvé " << std::endl;
+	if ( node == node->parent_node->sons[3] /*&& node->parent_node->sons[2]->type == FREE_NODE*/ ) {
+		//std::cout << " Voisin est trouvé x =  "<<node->parent_node->sons[2]->x<< " y = " << node->parent_node->sons[2]->y << std::endl;
 		return node->parent_node->sons[2];
 		
 	}
 	
-	if ( node == node->parent_node->sons[1] ) {
-		std::cout << " Voisin est trouvé " << std::endl;
+	if ( node == node->parent_node->sons[1] /*&& node->parent_node->sons[0]->type == FREE_NODE*/ ) {
+		//std::cout << " Voisin est trouvé x =  "<<node->parent_node->sons[0]->x<< " y = " << node->parent_node->sons[0]->y << std::endl;
 		return node->parent_node->sons[0];
 		
 	}
 
+	//std::cout << " Recherche de voisins dans le niveau au dessus " << std::endl;
 	Node* Inter = FindEastNeig(node->parent_node);
-
+	//std::cout << " Descente d'un niveau " << std::endl;
 	
-	if ( (Inter == NULL)||(Inter->isLeaf() == true) )
+	if ( (Inter == NULL)||(Inter->isLeaf() == true) ){
+		//std::cout << " Inter null ou feuille " << std::endl;
 		return NULL;
+	}
 	else
 	{
-		if ( node == node->parent_node->sons[2] ) { 
-			std::cout << " Voisin est trouvé " << std::endl;
-			return Inter->sons[3];
-			
+		if ( node == node->parent_node->sons[2] )  { 
+			//if ( Inter->sons[3]->type == FREE_NODE ) {
+				//std::cout << " Voisin inter est trouvé"<<  std::endl;
+				return Inter->sons[3];
+			/*
+			else
+				return NULL;*/
 		}
 		else{
-			std::cout << " Voisin est trouvé " << std::endl;
-			return Inter->sons[1];
-			
+			//if ( Inter->sons[1]->type == FREE_NODE ) {
+				//std::cout << " Voisin inter est trouvé "<< std::endl;
+				return Inter->sons[1];
+			/*
+			else
+				return NULL;*/
 		}
 	}
 
@@ -354,36 +291,47 @@ Node* FindEastNeig(Node* node){
 Node* FindSouthNeig(Node* node){
 	
 	if ( node->isRoot() == true ){
+		//std::cout << " Est Racine" << std::endl;
 		return NULL;
 	}
 	
-	if ( node == node->parent_node->sons[1] ) {
-		std::cout << " Voisin sud trouvé " << std::endl;
+	if ( node == node->parent_node->sons[1] /*&& node->parent_node->sons[3]->type == FREE_NODE*/ ) {
+		//std::cout << " Voisin sud trouvé x =  "<<node->parent_node->sons[3]->x<< " y = " << node->parent_node->sons[3]->y << std::endl;
 		return node->parent_node->sons[3];
 		
 	}
 	
-	if ( node == node->parent_node->sons[0] ) {
-		std::cout << " Voisin sud trouvé " << std::endl;
+	if ( node == node->parent_node->sons[0] /*&& node->parent_node->sons[2]->type == FREE_NODE*/  ) {
+		//std::cout << " Voisin sud trouvé x =  "<<node->parent_node->sons[2]->x<< " y = " << node->parent_node->sons[2]->y << std::endl;
 		return node->parent_node->sons[2];
 		
 	}
 
+	//std::cout << " Recherche de voisins dans le niveau au dessus " << std::endl;
 	Node* Inter = FindSouthNeig(node->parent_node);
-
+	//std::cout << " Descente d'un niveau " << std::endl;
 	
-	if ( (Inter == NULL)||(Inter->isLeaf() == true) )
+	if ( (Inter == NULL)||(Inter->isLeaf() == true) ){
+		//std::cout << " Inter null ou feuille " << std::endl;
 		return NULL;
+	}
 	else
 	{
-		if ( node == node->parent_node->sons[3] ) { 
-			std::cout << " Voisin sud trouvé " << std::endl;
-			return Inter->sons[1];
-			
+		if ( node == node->parent_node->sons[3]) { 
+			//if ( Inter->sons[1]->type == FREE_NODE ){
+				//std::cout << " Voisin inter sud trouvé "<< std::endl;
+				return Inter->sons[1];
+			/*
+			else
+				return NULL;*/
 		}
 		else{
-			std::cout << " Voisin sud trouvé " << std::endl;
-			return Inter->sons[0];
+			//if (Inter->sons[0]->type == FREE_NODE){
+				//std::cout << " Voisin inter sud trouvé "<< std::endl;
+				return Inter->sons[0];
+			/*
+			else
+				return NULL;*/
 			
 		}
 	}
@@ -393,36 +341,48 @@ Node* FindSouthNeig(Node* node){
 Node* FindWestNeig(Node* node){
 	
 	if ( node->isRoot() == true ){
+		//std::cout << " Est Racine" << std::endl;
 		return NULL;
 	}
 	
-	if ( node == node->parent_node->sons[0] ) {
-		std::cout << " Voisin ouest trouvé " << std::endl;
+	if ( node == node->parent_node->sons[0] /*&& node->parent_node->sons[1]->type == FREE_NODE*/ ) {
+		//std::cout << " Voisin ouest trouvé x =  "<<node->parent_node->sons[1]->x<< " y = " << node->parent_node->sons[1]->y << std::endl;
 		return node->parent_node->sons[1];
 		
 	}
 	
-	if ( node == node->parent_node->sons[2] ) {
-		std::cout << " Voisin ouest trouvé " << std::endl;
+	if ( node == node->parent_node->sons[2] /*&& node->parent_node->sons[3]->type == FREE_NODE*/ ) {
+		//std::cout << " Voisin ouest trouvé x =  "<<node->parent_node->sons[3]->x<< " y = " << node->parent_node->sons[3]->y << std::endl;
 		return node->parent_node->sons[3];
 		
 	}
 
+	//std::cout << " Recherche de voisins dans le niveau au dessus " << std::endl;
 	Node* Inter = FindWestNeig(node->parent_node);
-
+	//std::cout << " Descente d'un niveau " << std::endl;
 	
-	if ( (Inter == NULL)||(Inter->isLeaf() == true) )
+	if ( (Inter == NULL)||(Inter->isLeaf() == true) ){
+		//std::cout << " Inter null ou feuille " << std::endl;
 		return NULL;
+	}
 	else
 	{
 		if ( node == node->parent_node->sons[1] ) { 
-			std::cout << " Voisin ouest trouvé " << std::endl;
-			return Inter->sons[0];
+			//if ( Inter->sons[0]->type == FREE_NODE){
+				//std::cout << " Voisin inter ouest trouvé " << std::endl;
+				return Inter->sons[0];
+			/*
+			else
+				return NULL;*/
 			
 		}
 		else{
-			std::cout << " Voisin ouest trouvé " << std::endl;
-			return Inter->sons[2];
+			//if ( Inter->sons[2]->type == FREE_NODE){
+				//std::cout << " Voisin inter ouest trouvé " << std::endl;
+				return Inter->sons[2];
+			/*
+			else
+				return NULL;*/
 		}	
 	}
 
@@ -430,11 +390,39 @@ Node* FindWestNeig(Node* node){
 
 void NeigFill(Node* node){
 	
-	std::cout << " Debut recherche voisins " << std::endl;
+	std::cout << " Debut recherche voisins sur le node x =  "<<node->x<< " y = " << node->y << std::endl;
 	node->neighborhood.push_back(FindNorthNeig(node));
+	if( node->neighborhood.back() != NULL ){
+		
+		if( node->neighborhood.back()->type == BLOCKED_NODE  ){
+			std::cout << " Depop "  << std::endl;
+			node->neighborhood.pop_back();
+		}
+	}
 	node->neighborhood.push_back(FindEastNeig(node));
+	if( node->neighborhood.back() != NULL ){
+		
+		if( node->neighborhood.back()->type == BLOCKED_NODE  ){
+			std::cout << " Depop "  << std::endl;
+			node->neighborhood.pop_back();
+		}
+	}
 	node->neighborhood.push_back(FindSouthNeig(node));
+	if( node->neighborhood.back() != NULL ){
+		
+		if( node->neighborhood.back()->type == BLOCKED_NODE ){
+			std::cout << " Depop "  << std::endl;
+			node->neighborhood.pop_back();
+		}
+	}
 	node->neighborhood.push_back(FindWestNeig(node));
+	if( node->neighborhood.back() != NULL ){
+		
+		if(node->neighborhood.back()->type == BLOCKED_NODE ){
+			std::cout << " Depop "  << std::endl;
+			node->neighborhood.pop_back();
+		}
+	}
 	
 	
 }
