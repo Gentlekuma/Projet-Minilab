@@ -80,13 +80,16 @@ int main(){
     n2.neighborhood = neighborhood2;
     
     std::list<Node *> path;
-    a_star_qt(&n2, &n3, &path);
     
+    
+    a_star_qt(&n2, &n3, &path);
+    int res;
     
     if ( !(path.empty()) && path.back()->isGoal() ){
 	std::cout << "Path is okay :" << std::endl;
 	for (std::list<Node *>::iterator it = path.begin(); it != path.end(); it++){
-	    std::cout << (*it)->x << ' ' << (*it)->y << std::endl;
+		res = (*it)->resolution/2;
+	    std::cout << (*it)->x+res<< ' ' << (*it)->y+res << std::endl;
 	}
 	
     }

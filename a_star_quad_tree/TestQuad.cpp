@@ -5,10 +5,13 @@
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
+#include <vector>
+
+#include "Map.hpp"
+#include "a_star_quad_tree.hpp"
+#include "a_star_quad_tree.cpp"
 #include "node.hpp"
 #include "TestQuad.hpp"
-#include <vector>
-#include "Map.hpp"
 
 using namespace cv;
 
@@ -25,7 +28,7 @@ int main( int, char** argv )
 	int l = 0;
 	int id = 0;
 	
-	Node* root = new Node();
+	
 	
 	
 	//int reso = 32;
@@ -40,14 +43,17 @@ int main( int, char** argv )
 	
 	cvtColor(src, src, CV_BGR2GRAY);
 	
-	//Initialisation du node root 
+	//Initialisation du node root
+	std::array<Node*, 4> sons = {NULL,NULL,NULL,NULL};
+    std::list<Node *> neighborhood; 
+
+	Node root(0, 0, src.rows, NULL, MIXED_NODE, sons, neighborhood);
+	//root->x = 0;
+	//root->y = 0;
+	//root->resolution = src.rows;
+	//root->type = MIXED_NODE;
 	
-	root->x = 0;
-	root->y = 0;
-	root->resolution = src.rows;
-	root->type = MIXED_NODE;
-	
-	Decide(root);
+	Decide(&root);
 	
 	
 	//Tests accès pixels image
@@ -70,6 +76,21 @@ int main( int, char** argv )
 	
 	//Verification emplacement des feuilles libres
 	int taille = leaf.size();
+	
+	
+	int k = 0;
+	int idgoal = 0;
+	//Recherche des voisins et choix du goal 
+	for( k = 0; k<taille ; k++){
+		if ( leaf[k]->x == 128 && leaf[k]->y == 192 ) {
+			leaf[k]->type = GOAL_NODE;
+			idgoal = k;
+			std::cout << "Goal trouvé "<< std::endl;
+		}
+		NeigFill(leaf[k]);
+		
+	}
+	
 	for( l = 0; l<taille ; l++){
 		//std::cout << "Leaf "<< l << " x "<<leaf[l]->x<< std::endl;
 		//std::cout << "Leaf "<< l << " y "<<leaf[l]->y<< std::endl;
@@ -79,20 +100,44 @@ int main( int, char** argv )
         color[2] = 255;
         src.at<Vec3b>(leaf[l]->x,leaf[l]->y) = color;
 	}
-	
-	int k = 0;
-	//Recherche des voisins et choix du goal 
-	for( k = 0; k<taille ; k++){
-		if ( leaf[k]->x == 160 && leaf[k]->y == 192 ) {
-			leaf[k]->type = GOAL_NODE;
-		}
-		NeigFill(leaf[k]);
-		
-		std::cout << "Nombre de voisins "<<leaf[k]->neighborhood.size()<< std::endl;
-	}
 
 
 	imshow("pad", src);
+	
+	
+	std::list<Node *> path;
+    
+    // Test A*
+    
+    int heu = leaf[2]->heuristique(leaf[idgoal]);
+    std::list<Node *>::iterator end = leaf[5]->neighborhood.end();
+    
+    for (std::list<Node *>::iterator it = leaf[5]->neighborhood.begin(); it != end; ++it){
+		    std::cout << "Position feuille  "<<leaf[5]->x <<" " <<leaf[5]->y << std::endl;
+			std::cout << "Test position  "<<(*it)->x <<" " <<(*it)->y << std::endl;
+			std::cout << "Test resolution  "<<(*it)->resolution<< std::endl;
+	}
+	
+    /*
+    std::cout << "Voisins  "<<leaf[3]->neighborhood.begin()<< std::endl;
+    std::cout << "Voisins goal "<<leaf[idgoal]->neighborhood.begin()<< std::endl;
+    */
+    /*
+    a_star_qt(leaf[1], leaf[idgoal], &path);
+    int res;
+    
+    if ( !(path.empty()) && path.back()->isGoal() ){
+		std::cout << "Path is okay :" << std::endl;
+		for (std::list<Node *>::iterator it2 = path.begin(); it2 != path.end(); it2++){
+			res = (*it2)->resolution/2;
+			std::cout << (*it2)->x+res<< ' ' << (*it2)->y+res << std::endl;
+		}
+	
+    }
+    else{
+		std::cerr << "Path is not okay" << std::endl;
+		exit(-1);
+    }*/
 	
 	
 	std::cout << "Fin test "<<level<< std::endl;
@@ -391,40 +436,46 @@ Node* FindWestNeig(Node* node){
 void NeigFill(Node* node){
 	
 	std::cout << " Debut recherche voisins sur le node x =  "<<node->x<< " y = " << node->y << std::endl;
-	node->neighborhood.push_back(FindNorthNeig(node));
-	if( node->neighborhood.back() != NULL ){
-		
-		if( node->neighborhood.back()->type == BLOCKED_NODE  ){
+	node->neighborhood.push_front(FindNorthNeig(node));
+	if( node->neighborhood.front() != NULL ){
+		std::cout << " Position voisin x =  "<<node->neighborhood.front()->x<< " y = " << node->neighborhood.front()->y << std::endl;
+		if( node->neighborhood.front()->type == BLOCKED_NODE  ){
 			std::cout << " Depop "  << std::endl;
-			node->neighborhood.pop_back();
-		}
-	}
-	node->neighborhood.push_back(FindEastNeig(node));
-	if( node->neighborhood.back() != NULL ){
-		
-		if( node->neighborhood.back()->type == BLOCKED_NODE  ){
-			std::cout << " Depop "  << std::endl;
-			node->neighborhood.pop_back();
-		}
-	}
-	node->neighborhood.push_back(FindSouthNeig(node));
-	if( node->neighborhood.back() != NULL ){
-		
-		if( node->neighborhood.back()->type == BLOCKED_NODE ){
-			std::cout << " Depop "  << std::endl;
-			node->neighborhood.pop_back();
-		}
-	}
-	node->neighborhood.push_back(FindWestNeig(node));
-	if( node->neighborhood.back() != NULL ){
-		
-		if(node->neighborhood.back()->type == BLOCKED_NODE ){
-			std::cout << " Depop "  << std::endl;
-			node->neighborhood.pop_back();
+			node->neighborhood.pop_front();
 		}
 	}
 	
+	std::cout << "Nombre de voisins "<<node->neighborhood.size()<< std::endl;
+	node->neighborhood.push_front(FindEastNeig(node));
+	if( node->neighborhood.front() != NULL ){
+		std::cout << " Position voisin x =  "<<node->neighborhood.front()->x<< " y = " << node->neighborhood.front()->y << std::endl;
+		if( node->neighborhood.front()->type == BLOCKED_NODE  ){
+			std::cout << " Depop "  << std::endl;
+			node->neighborhood.pop_front();
+		}
+	}
 	
+	std::cout << "Nombre de voisins "<<node->neighborhood.size()<< std::endl;
+	node->neighborhood.push_front(FindSouthNeig(node));
+	if( node->neighborhood.front() != NULL ){
+		std::cout << " Position voisin x =  "<<node->neighborhood.front()->x<< " y = " << node->neighborhood.front()->y << std::endl;
+		if( node->neighborhood.front()->type == BLOCKED_NODE ){
+			std::cout << " Depop "  << std::endl;
+			node->neighborhood.pop_front();
+		}
+	}
+	
+	std::cout << "Nombre de voisins "<<node->neighborhood.size()<< std::endl;
+	node->neighborhood.push_front(FindWestNeig(node));
+	if( node->neighborhood.front() != NULL ){
+		std::cout << " Position voisin x =  "<<node->neighborhood.front()->x<< " y = " << node->neighborhood.front()->y << std::endl;
+		if(node->neighborhood.front()->type == BLOCKED_NODE ){
+			std::cout << " Depop "  << std::endl;
+			node->neighborhood.pop_front();
+		}
+	}
+	
+	std::cout << "Nombre de voisins "<<node->neighborhood.size()<< std::endl;
 }
 
 
